@@ -1,0 +1,8 @@
+<library path="lib/libpai_motor_control">
+    <class name="pai_motor_control/PaiMotorController" 
+           type="pai_motor_control::PaiMotorController"           
+           base_class_type="controller_interface::ControllerBase"/>
+        <description>
+            The Pai Motor controller.
+        </description>
+</library>
