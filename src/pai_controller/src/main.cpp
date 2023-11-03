@@ -37,59 +37,61 @@ int main(int argc, char **argv)
     ioInter = new PaiIO(robot_name);
     LowlevelCmd *cmd = new LowlevelCmd();
     LowlevelState *state = new LowlevelState();
-    LegController *legController = new LegController(biped);
-    StateEstimatorContainer *stateEstimator = new StateEstimatorContainer(state,
-                                                                          legController->data,
-                                                                          &stateEstimate);
-    stateEstimator->addEstimator<CheaterOrientationEstimator>();
-    stateEstimator->addEstimator<CheaterPositionVelocityEstimator>();
-    DesiredStateCommand *desiredStateCommand = new DesiredStateCommand(&stateEstimate, dt);
-
-    ControlFSMData *_controlData = new ControlFSMData;
-    _controlData->_biped = &biped;
-    _controlData->_stateEstimator = stateEstimator;
-    _controlData->_legController = legController;
-    _controlData->_desiredStateCommand = desiredStateCommand;
-    _controlData->_interface = ioInter;
-    _controlData->_lowCmd = cmd;
-    _controlData->_lowState = state;
-    FSM *_FSMController = new FSM(_controlData);
+    
     signal(SIGINT, ShutDown);
     ///////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////simple control////////////////////////////////////////
     
-    // for (size_t i = 0; i < 10; i++)
-    // {
-    //     cmd->motorCmd[i].q = 0.0;
-    //     cmd->motorCmd[i].dq = 0.0;
-    //     cmd->motorCmd[i].Kp = 300.0;
-    //     cmd->motorCmd[i].Kd = 0.1;
-    // }
+    for (size_t i = 0; i < 10; i++)
+    {
+        cmd->motorCmd[i].q = 0.0;
+        cmd->motorCmd[i].dq = 0.0;
+        cmd->motorCmd[i].Kp = 300.0;
+        cmd->motorCmd[i].Kd = 0.1;
+    }
 
-    // cmd->motorCmd[9].q = 0.0;
-    // cmd->motorCmd[9].dq = 0.0;
-    // cmd->motorCmd[9].Kp = 25.0;
-    // cmd->motorCmd[9].Kd = 0.025;
-    // cmd->motorCmd[4].q = 0.0;
-    // cmd->motorCmd[4].dq = 0.0;
-    // cmd->motorCmd[4].Kp = 25.0;
-    // cmd->motorCmd[4].Kd = 0.025;
-    // cout << state->motorState[6].q << " " << cmd->motorCmd[6].q << endl;
-    // while (ros::ok())
-    // {
-    //     ioInter->sendRecv(cmd, state);
-    //     rate.sleep();
-    //     // cont++;
-    //     // cout << state->motorState[6].q << " " << cmd->motorCmd[6].q << endl;
-    // }
+    cmd->motorCmd[9].q = 0.0;
+    cmd->motorCmd[9].dq = 0.0;
+    cmd->motorCmd[9].Kp = 25.0;
+    cmd->motorCmd[9].Kd = 0.025;
+    cmd->motorCmd[4].q = 0.0;
+    cmd->motorCmd[4].dq = 0.0;
+    cmd->motorCmd[4].Kp = 25.0;
+    cmd->motorCmd[4].Kd = 0.025;
+    cout << state->motorState[6].q << " " << cmd->motorCmd[6].q << endl;
+    while (ros::ok())
+    {
+        ioInter->sendRecv(cmd, state);
+        rate.sleep();
+        // cont++;
+        // cout << state->motorState[6].q << " " << cmd->motorCmd[6].q << endl;
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////gazebo////////////////////////////////////////////////
-    while(ros::ok())
-    {
-        _FSMController->run();
-        rate.sleep();
-    }
-    delete _controlData;
+
+    // LegController *legController = new LegController(biped);
+    // StateEstimatorContainer *stateEstimator = new StateEstimatorContainer(state,
+    //                                                                       legController->data,
+    //                                                                       &stateEstimate);
+    // stateEstimator->addEstimator<CheaterOrientationEstimator>();
+    // stateEstimator->addEstimator<CheaterPositionVelocityEstimator>();
+    // DesiredStateCommand *desiredStateCommand = new DesiredStateCommand(&stateEstimate, dt);
+
+    ControlFSMData *_controlData = new ControlFSMData;
+    // _controlData->_biped = &biped;
+    // _controlData->_stateEstimator = stateEstimator;
+    // _controlData->_legController = legController;
+    // _controlData->_desiredStateCommand = desiredStateCommand;
+    // _controlData->_interface = ioInter;
+    // _controlData->_lowCmd = cmd;
+    // _controlData->_lowState = state;
+    // FSM *_FSMController = new FSM(_controlData);
+    // while(ros::ok())
+    // {
+    //     _FSMController->run();
+    //     rate.sleep();
+    // }
+    // delete _controlData;
     return 0;
 }

@@ -1,0 +1,5 @@
+/.catkin_workspace
+/.vscode
+/build
+/devel
+/foot_pos.txt
