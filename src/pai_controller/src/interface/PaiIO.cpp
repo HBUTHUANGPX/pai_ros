@@ -35,19 +35,19 @@ PaiIO::~PaiIO()
 void PaiIO::sendRecv(const LowlevelCmd *cmd, LowlevelState *state)
 {
     sendCmd(cmd);
-    // std::cout << "sendcmd ok" << std::endl;
+    std::cout << "sendcmd ok" << std::endl;
     recvState(state);
-    // std::cout << "recvstate ok" << std::endl;
+    std::cout << "recvstate ok" << std::endl;
     cmdPanel->updateVelCmd(state);
-    // std::cout << "updata ok" << std::endl;
+    std::cout << "updata ok" << std::endl;
     state->userCmd = cmdPanel->getUserCmd();
     state->userValue = cmdPanel->getUserValue();
-    // std::cout << "ok" << std::endl;
+    std::cout << "ok" << std::endl;
 }
 void PaiIO::sendCmd(const LowlevelCmd *cmd)
 {
 #if USE
-    for (motor motor_cmd:_send_recv._motors)
+    for (motor motor_cmd : _send_recv._motors)
     {
         motor_cmd._driver_pointer->set_motor_position(motor_cmd._ID,
                                                       cmd->motorCmd[motor_cmd._num].q,
@@ -57,7 +57,7 @@ void PaiIO::sendCmd(const LowlevelCmd *cmd)
                                                       cmd->motorCmd[motor_cmd._num].Kd);
     }
 #else
-    
+
     for (int i = 0; i < 10; i++)
     {
         _lowCmd.motorCmd[i].mode = 0X0A; // alwasy set it to 0X0A
@@ -80,6 +80,15 @@ void PaiIO::sendCmd(const LowlevelCmd *cmd)
 }
 void PaiIO::recvState(LowlevelState *state)
 {
+#if USE
+    for (motor motor_cmd : _send_recv._motors)
+    {
+        motor_cmd.fresh_motor();
+        state->motorState[motor_cmd._num].q = motor_cmd.motor_fb_space.position;
+        state->motorState[motor_cmd._num].dq = motor_cmd.motor_fb_space.velocity;
+        state->motorState[motor_cmd._num].tauEst = motor_cmd.motor_fb_space.torque;
+    }
+#else
     for (int i = 0; i < 10; i++)
     {
         state->motorState[i].q = _highState.motorState[i].q;
@@ -94,6 +103,7 @@ void PaiIO::recvState(LowlevelState *state)
         state->vWorld[i] = _highState.velocity[i];
     }
     state->imu.quaternion[3] = _highState.imu.quaternion[3];
+#endif
 }
 #if USE // 使用真实机器人
 std::string _use = "_real";

@@ -33,6 +33,7 @@ Livelybot_Driver::Livelybot_Driver(const string spi_dev) {
 
 motor_fb_space_s Livelybot_Driver::get_motor_state(int8_t motor_id)
 {
+    std::cout<<"motor_id:"<<motor_id<<std::endl;
     int8_t switch_can = motor_id & 0xf0;
     int8_t id = motor_id & 0x0f;
     if(switch_can == 0x10)
@@ -43,6 +44,7 @@ motor_fb_space_s Livelybot_Driver::get_motor_state(int8_t motor_id)
     {
         return all_motor_status.motor_fb2[id-1].motor;
     }
+    std::cout<<"motor_id no"<<std::endl;
     return *(motor_fb_space_s*)nullptr;
 }
 

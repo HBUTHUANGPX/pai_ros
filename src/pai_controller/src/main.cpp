@@ -34,10 +34,10 @@ int main(int argc, char **argv)
     Biped biped;
     StateEstimate stateEstimate;
     biped.setBiped();
-    ioInter = new PaiIO(robot_name,"");
+    ioInter = new PaiIO(robot_name,"/dev/spidev4.1");
     LowlevelCmd *cmd = new LowlevelCmd();
     LowlevelState *state = new LowlevelState();
-    
+    std::cout<<"init ok"<<std::endl;
     signal(SIGINT, ShutDown);
     ///////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////simple control////////////////////////////////////////
@@ -49,6 +49,7 @@ int main(int argc, char **argv)
         cmd->motorCmd[i].Kp = 300.0;
         cmd->motorCmd[i].Kd = 0.1;
     }
+    //
 
     cmd->motorCmd[9].q = 0.0;
     cmd->motorCmd[9].dq = 0.0;
@@ -61,7 +62,8 @@ int main(int argc, char **argv)
     cout << state->motorState[6].q << " " << cmd->motorCmd[6].q << endl;
     while (ros::ok())
     {
-        ioInter->sendRecv(cmd, state);
+        // ioInter->sendRecv(cmd, state);
+        ioInter->
         rate.sleep();
         // cont++;
         // cout << state->motorState[6].q << " " << cmd->motorCmd[6].q << endl;

@@ -10,8 +10,8 @@
 
 #include "IOInterface.h"
 #include "KeyBoard.h"
-// #include "../use.h"
-#define USE 1 // 0是Gazebo 1是真实机器人
+#include "../use.h"
+// #define USE 1 // 0是Gazebo 1是真实机器人
 
 #include <csignal>
 #include "send_recv.h"
@@ -23,13 +23,14 @@ private:
     std::string _robot_name;
     pai_msgs::HighState _highState;
     pai_msgs::LowCmd _lowCmd;
+
+public:
 #if USE // 使用真实机器人
     send_recv _send_recv;
 #else
     ros::Subscriber _servo_sub[10], _state_sub;
     ros::Publisher _servo_pub[10];
 #endif
-public:
     PaiIO(std::string robot_name, const std::string spi_name);
     ~PaiIO();
     void sendCmd(const LowlevelCmd *cmd);
