@@ -1,16 +1,19 @@
 #include "../../include/interface/PaiIO.h"
-#include "../../include/use.h"
 inline void RosShutDown(int sig)
 {
     ROS_INFO("ROS interface shutting down!");
     ros::shutdown();
 }
-PaiIO::PaiIO(std::string robot_name) : IOInterface()
+PaiIO::PaiIO(std::string robot_name, const std::string spi_name) : IOInterface(),
+#if USE
+                                                                   _send_recv(_nm, robot_name, spi_name)
+#endif
 {
     std::cout << "The control interface for ROS Gazebo simulation with cheat states from gazebo" << std::endl;
     _robot_name = robot_name;
     std::cout << "The robot name: " << robot_name << std::endl;
-
+#if USE
+#else
     // start subscriber
     initRecv();
     ROS_INFO("initRecv");
@@ -20,7 +23,7 @@ PaiIO::PaiIO(std::string robot_name) : IOInterface()
     // initialize publisher
     initSend();
     ROS_INFO("initSend");
-
+#endif
     signal(SIGINT, RosShutDown);
 
     cmdPanel = new KeyBoard();
@@ -43,6 +46,18 @@ void PaiIO::sendRecv(const LowlevelCmd *cmd, LowlevelState *state)
 }
 void PaiIO::sendCmd(const LowlevelCmd *cmd)
 {
+#if USE
+    for (motor motor_cmd:_send_recv._motors)
+    {
+        motor_cmd._driver_pointer->set_motor_position(motor_cmd._ID,
+                                                      cmd->motorCmd[motor_cmd._num].q,
+                                                      cmd->motorCmd[motor_cmd._num].dq,
+                                                      cmd->motorCmd[motor_cmd._num].tau,
+                                                      cmd->motorCmd[motor_cmd._num].Kp,
+                                                      cmd->motorCmd[motor_cmd._num].Kd);
+    }
+#else
+    
     for (int i = 0; i < 10; i++)
     {
         _lowCmd.motorCmd[i].mode = 0X0A; // alwasy set it to 0X0A
@@ -55,10 +70,12 @@ void PaiIO::sendCmd(const LowlevelCmd *cmd)
     }
 
     // std::cout<<_lowCmd.motorCmd[6].q<<std::endl;
+
     for (int m = 0; m < 10; m++)
     {
         _servo_pub[m].publish(_lowCmd.motorCmd[m]);
     }
+#endif
     ros::spinOnce();
 }
 void PaiIO::recvState(LowlevelState *state)
@@ -80,9 +97,8 @@ void PaiIO::recvState(LowlevelState *state)
 }
 #if USE // 使用真实机器人
 std::string _use = "_real";
-#else // 使用Gazebo
+#else   // 使用Gazebo
 std::string _use = "_gazebo";
-#endif
 void PaiIO::initSend()
 {
     _servo_pub[0] = _nm.advertise<pai_msgs::MotorCmd>("/" + _robot_name + _use + "L_hip_controller/command", 1);
@@ -100,7 +116,7 @@ void PaiIO::initRecv()
 {
 #if USE // 使用真实机器人
     _state_sub = _nm.subscribe("/real/model_states", 1, &PaiIO::StateCallback, this);
-#else // 使用Gazebo
+#else   // 使用Gazebo
     _state_sub = _nm.subscribe("/gazebo/model_states", 1, &PaiIO::StateCallback, this);
 #endif
     _servo_sub[0] = _nm.subscribe("/" + _robot_name + _use + "L_hip_controller/state", 1, &PaiIO::LhipCallback, this);
@@ -214,3 +230,4 @@ void PaiIO::RtoeCallback(const pai_msgs::MotorState &msg)
     _highState.motorState[9].dq = msg.dq;
     _highState.motorState[9].tauEst = msg.tauEst;
 }
+#endif

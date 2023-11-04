@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     Biped biped;
     StateEstimate stateEstimate;
     biped.setBiped();
-    ioInter = new PaiIO(robot_name);
+    ioInter = new PaiIO(robot_name,"");
     LowlevelCmd *cmd = new LowlevelCmd();
     LowlevelState *state = new LowlevelState();
     
