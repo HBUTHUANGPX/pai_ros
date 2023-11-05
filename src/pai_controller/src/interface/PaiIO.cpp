@@ -35,14 +35,16 @@ PaiIO::~PaiIO()
 void PaiIO::sendRecv(const LowlevelCmd *cmd, LowlevelState *state)
 {
     sendCmd(cmd);
-    std::cout << "sendcmd ok" << std::endl;
+    // std::cout << "sendcmd ok" << std::endl;
     recvState(state);
-    std::cout << "recvstate ok" << std::endl;
+    // std::cout << "recvstate ok" << std::endl;
+    _send_recv._driver.spi_send();
+
     cmdPanel->updateVelCmd(state);
-    std::cout << "updata ok" << std::endl;
+    // std::cout << "updata ok" << std::endl;
     state->userCmd = cmdPanel->getUserCmd();
     state->userValue = cmdPanel->getUserValue();
-    std::cout << "ok" << std::endl;
+    // std::cout << "ok" << std::endl;
 }
 void PaiIO::sendCmd(const LowlevelCmd *cmd)
 {
@@ -50,11 +52,12 @@ void PaiIO::sendCmd(const LowlevelCmd *cmd)
     for (motor motor_cmd : _send_recv._motors)
     {
         motor_cmd._driver_pointer->set_motor_position(motor_cmd._ID,
-                                                      cmd->motorCmd[motor_cmd._num].q,
-                                                      cmd->motorCmd[motor_cmd._num].dq,
-                                                      cmd->motorCmd[motor_cmd._num].tau,
-                                                      cmd->motorCmd[motor_cmd._num].Kp,
-                                                      cmd->motorCmd[motor_cmd._num].Kd);
+                                                      0,//cmd->motorCmd[motor_cmd._num].q,
+                                                      0,//cmd->motorCmd[motor_cmd._num].dq,
+                                                      0,//cmd->motorCmd[motor_cmd._num].tau,
+                                                      0,//cmd->motorCmd[motor_cmd._num].Kp,
+                                                      0.15//cmd->motorCmd[motor_cmd._num].Kd
+                                                      );
     }
 #else
 

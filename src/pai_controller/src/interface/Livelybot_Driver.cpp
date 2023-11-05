@@ -33,9 +33,11 @@ Livelybot_Driver::Livelybot_Driver(const string spi_dev) {
 
 motor_fb_space_s Livelybot_Driver::get_motor_state(int8_t motor_id)
 {
-    std::cout<<"motor_id:"<<motor_id<<std::endl;
+    // std::cout<<"motor_id:"<<motor_id<<std::endl;
     int8_t switch_can = motor_id & 0xf0;
     int8_t id = motor_id & 0x0f;
+    // cout<<"switch_can: "<<(int)switch_can<<endl;
+    // cout<<"id: "<<(int)id<<endl;
     if(switch_can == 0x10)
     {
         return all_motor_status.motor_fb1[id-1].motor;
@@ -44,7 +46,7 @@ motor_fb_space_s Livelybot_Driver::get_motor_state(int8_t motor_id)
     {
         return all_motor_status.motor_fb2[id-1].motor;
     }
-    std::cout<<"motor_id no"<<std::endl;
+    // std::cout<<"motor_id no"<<std::endl;
     return *(motor_fb_space_s*)nullptr;
 }
 
@@ -162,7 +164,7 @@ position：  位置
 */
 void Livelybot_Driver::set_motor_position(int8_t motor_id, int32_t position)
 {
-    motor_set(motor_id, 5, position, 0, 0, 0, 0);
+    motor_set(motor_id, 5, position, 0, 0, 0.23, 0);
 }
 //位置PD模式
 /*

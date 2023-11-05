@@ -7,11 +7,11 @@ private:
     std::string _robot_name;
     std::vector<std::string> _motor_names;
     const string spi_dev;
-    Livelybot_Driver _driver;
 
 protected:
 public:
     std::vector<motor> _motors;
+    Livelybot_Driver _driver;
 
     send_recv(ros::NodeHandle nm, std::string robot_name, const std::string spi_dev) : _nm(nm), _robot_name(robot_name), _driver(spi_dev)
     {
@@ -32,6 +32,7 @@ public:
             int ID,num;
             _nm.getParam(_motor_name+"_ID",ID);
             _nm.getParam(_motor_name+"_num",num);
+            std::cout<<_motor_name<<":"<<"ID: "<<ID<<" num: "<<num<<std::endl;
             _motors.push_back(motor(_nm, _robot_name, _motor_name, _driver_pointer,ID,num));
         }
     }

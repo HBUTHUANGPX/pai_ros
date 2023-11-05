@@ -5,8 +5,8 @@
 #define MOTOR_TYPE 0 //暂时均为0
 
 //用户配置区
-#define CAN1_NUM           6    //CAN1的电机数量
-#define CAN2_NUM           6    //CAN2的电机数量
+#define CAN1_NUM           5    //CAN1的电机数量
+#define CAN2_NUM           5    //CAN2的电机数量
 #define ENABLE_IMU         1    //是否使能IMU
 #define ENABLE_FOOTSENSOR  0    //是否使能足底传感器
 #define ENABLE_STOP        0    //是否使能通讯断开让所有电机停在当前位置

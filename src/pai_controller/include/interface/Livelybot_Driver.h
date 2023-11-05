@@ -15,17 +15,16 @@
 
 using namespace std;
 
-using std::chrono::high_resolution_clock;
 using std::chrono::duration;
 using std::chrono::duration_cast;
+using std::chrono::high_resolution_clock;
 
 #define SPI_SPEED 6000000
 #define PI 3.1415926
 
 #define ERROR_TRANSFER_DATA 0xffffaaaa
-
 #pragma anon_unions
-#pragma pack(1)  
+#pragma pack(1)
 typedef struct
 {
     uint8_t motor_id;
@@ -33,16 +32,16 @@ typedef struct
     int32_t position;
     int32_t velocity;
     int32_t torque;
-}motor_fb_space_s;
+} motor_fb_space_s;
 
-typedef struct 
+typedef struct
 {
-    union 
+    union
     {
         motor_fb_space_s motor;
         uint8_t data[MOTOR_STATUS_LENGTH];
     };
-}motor_fb_s;
+} motor_fb_s;
 
 typedef struct
 {
@@ -58,7 +57,7 @@ typedef struct
     int16_t magX;
     int16_t magY;
     int16_t magZ;
-}imu_space_s;
+} imu_space_s;
 
 typedef struct
 {
@@ -67,7 +66,7 @@ typedef struct
         imu_space_s imu_data;
         uint8_t data[YJ901S_DATA_SIZE];
     };
-}imu_s;
+} imu_s;
 
 typedef struct
 {
@@ -77,36 +76,36 @@ typedef struct
     int32_t velocity;
     int32_t torque;
     float kp;
-    float kd; 
-}motor_set_space_s;
+    float kd;
+} motor_set_space_s;
 
 typedef struct
 {
-union 
-{
-    motor_set_space_s motor;
-    uint8_t data[MOTOR_SET_LENGTH];
-};
-}motor_set_s;
+    union
+    {
+        motor_set_space_s motor;
+        uint8_t data[MOTOR_SET_LENGTH];
+    };
+} motor_set_s;
 
-#pragma pack ()
+#pragma pack()
 
 typedef enum
 {
     ANG2POS = 0x20,
     RAD2POS,
     TOR2TOR,
-}tranfer_send_type_e;
+} tranfer_send_type_e;
 
 typedef enum
 {
     POS2ANG = 0x30,
     POS2RAD,
-}tranfer_rec_type_e;
+} tranfer_rec_type_e;
 
-class Motor_Status{
+class Motor_Status
+{
 public:
-
     motor_fb_s motor_fb1[14];
     motor_fb_s motor_fb2[14];
 
@@ -119,7 +118,8 @@ public:
 };
 
 // 定义一个简单的类
-class Livelybot_Driver {
+class Livelybot_Driver
+{
 private:
     string my_spi_dev;
     int8_t my_motor_type;
@@ -137,6 +137,7 @@ private:
     uint8_t bits_per_word;
     uint8_t mode;
     high_resolution_clock::time_point t1, t2;
+
 public:
     // 构造函数
     Livelybot_Driver(const string spi_dev);
@@ -146,11 +147,11 @@ public:
 
     imu_space_s get_imu_data(void);
 
-    uint8_t* get_footsensor_data(uint8_t switch_can);
+    uint8_t *get_footsensor_data(uint8_t switch_can);
     bool spi_send(void);
 
     void set_motor_position(int8_t motor_id, int32_t position);
-   
+
     void set_motor_position(int8_t motor_id, int32_t position, int32_t velocity, int32_t torque, float kp, float kd);
 
     void set_motor_velocity(int8_t motor_id, int32_t velocity);
@@ -161,7 +162,6 @@ public:
     float transfer_rec(tranfer_rec_type_e type, int32_t data);
 
 private:
-    
     void set_robot_param(int8_t motor_type, int8_t can1_motor_num, int8_t can2_motor_num, uint8_t isenable_imu, uint8_t isenable_footsensor)
     {
         my_motor_type = motor_type;
@@ -169,47 +169,51 @@ private:
         my_can2_motor_num = can2_motor_num;
         my_isenable_imu = isenable_imu;
         my_isenable_footsensor = isenable_footsensor;
-        #ifdef DEBUG
-        cout<<"spi_dev:"<<my_spi_dev<<endl;
+#ifdef DEBUG
+        cout << "spi_dev:" << my_spi_dev << endl;
         printf("motor_type:%u, can1_motor_num:%u, can2_motor_num:%u, enable_imu:%u, footsensor:%u\n", motor_type, can1_motor_num, can2_motor_num, isenable_imu, isenable_footsensor);
-        #endif // DEBUG
+#endif // DEBUG
 
         int ret;
 
-        //使用SPI1接口
+        // 使用SPI1接口
         spi_fd = open(my_spi_dev.data(), O_RDWR);
-        if (spi_fd < 0) {
+        if (spi_fd < 0)
+        {
             perror("Error: Cann't open SPI Dev.\n");
             return;
         }
 
-        //配置SPI参数
+        // 配置SPI参数
         speed = SPI_SPEED;
         delay = 0;
         bits_per_word = 8;
         mode = 0;
         ret = ioctl(spi_fd, SPI_IOC_WR_MODE, &mode);
-        if (ret == -1) {
+        if (ret == -1)
+        {
             perror("Error: SPI_IOC_WR_MODE fault.\n");
             spi_tx_motor_num = 0;
             return;
         }
 
         ret = ioctl(spi_fd, SPI_IOC_WR_BITS_PER_WORD, &bits_per_word);
-        if (ret == -1) {
+        if (ret == -1)
+        {
             perror("Error: SPI_IOC_WR_BITS fault.\n");
             spi_tx_motor_num = 0;
             return;
         }
 
         ret = ioctl(spi_fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
-        if (ret == -1) {
+        if (ret == -1)
+        {
             perror("Error: SPI_IOC_WR_MAX_SPEED fault.\n");
             spi_tx_motor_num = 0;
             return;
         }
 
-        //发送数据
+        // 发送数据
         spi_tx_databuffer[2] = 0x20;
         spi_tx_databuffer[3] = motor_type;
         spi_tx_databuffer[4] = can1_motor_num;
@@ -217,16 +221,18 @@ private:
         spi_tx_databuffer[6] = isenable_imu;
         spi_tx_databuffer[7] = isenable_footsensor;
         spi_tx_databuffer[8] = ENABLE_STOP;
-        #ifdef TX_DEBUG
+#ifdef TX_DEBUG
         printf("tx_data: ");
-        for(uint16_t i = 0; i < DATA_PKG_SIZE; i++)
+        for (uint16_t i = 0; i < DATA_PKG_SIZE; i++)
         {
             printf("0x%02x,", spi_tx_databuffer[i]);
         }
         printf("\n");
-        #endif // 
+#endif //
         uint8_t rx_buf[DATA_PKG_SIZE] = {};
-        struct spi_ioc_transfer spi { };
+        struct spi_ioc_transfer spi
+        {
+        };
         spi.tx_buf = (unsigned long)spi_tx_databuffer;
         spi.rx_buf = (unsigned long)rx_buf;
         spi.len = sizeof(spi_tx_databuffer);
@@ -235,33 +241,33 @@ private:
         spi.bits_per_word = bits_per_word;
         // Send wr_addr
         ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi);
-        if (ret < 1) {
+        if (ret < 1)
+        {
             perror("Error: SPI_IOC_MESSAGE fault.\n");
             spi_tx_motor_num = 0;
             return;
         }
-        #ifdef DEBUG
+#ifdef DEBUG
         printf("transmit suc!\n");
-        #endif // DEBUG
-        #ifdef RX_DEBUG
+#endif // DEBUG
+#ifdef RX_DEBUG
         printf("recv data: ");
-        for(uint16_t i = 0; i < DATA_PKG_SIZE; i++)
+        for (uint16_t i = 0; i < DATA_PKG_SIZE; i++)
         {
             printf("0x%02x,", rx_buf[i]);
         }
         printf("\n");
-        #endif // DEBUG
+#endif // DEBUG
         parse_datas(rx_buf);
-        
+
         close(spi_fd);
-        
     }
 
     void motor_set(uint8_t motor_id, int32_t cmd, int32_t posorvolt, int32_t vel, int32_t torque, float kp, float kd)
     {
-        #ifdef DEBUG
-        cout<<"spi_dev:"<<my_spi_dev<<endl;
-        #endif
+#ifdef DEBUG
+        cout << "spi_dev:" << my_spi_dev << endl;
+#endif
         motor_set_s motor_state;
 
         motor_state.motor.motor_id = motor_id;
@@ -271,12 +277,36 @@ private:
         motor_state.motor.torque = torque;
         motor_state.motor.kp = kp;
         motor_state.motor.kd = kd;
-        if(spi_tx_motor_num >= (my_can1_motor_num + my_can2_motor_num))
+        // if(spi_tx_motor_num >= (my_can1_motor_num + my_can2_motor_num))
+        // {
+        //     printf("the motor num overflow!!!!!!\n");
+        //     return;
+        // }
+        int8_t switch_can = motor_id & 0xf0;
+
+        int8_t id = motor_id & 0x0f;
+        int8_t can_num;
+        if (switch_can == 0x10)
         {
-            printf("the motor num overflow!!!!!!\n");
-            return;
+            can_num = 1;
+            if (id > CAN1_NUM)
+            {
+                std::cout << "CAN ID overflow!" << std::endl;
+            }
         }
-        memcpy(&spi_tx_databuffer[3 + spi_tx_motor_num * MOTOR_SET_LENGTH], motor_state.data, MOTOR_SET_LENGTH);
+        else if (switch_can == 0x20)
+        {
+            can_num = 2;
+            if (id > CAN2_NUM)
+            {
+                std::cout << "CAN ID overflow!" << std::endl;
+            }
+        }
+        else
+        {
+            std::cout << "CAN switch overflow!" << std::endl;
+        }
+        memcpy(&spi_tx_databuffer[3 + (((can_num - 1) * 5) + id) * MOTOR_SET_LENGTH], motor_state.data, MOTOR_SET_LENGTH);
         spi_tx_motor_num++;
     }
 
@@ -284,30 +314,30 @@ private:
     {
         uint8_t temp_id = 0x00;
         uint8_t temp_can = 0x00;
-        //解析数据
-        if(rx_buf[0] != 0xA6 || rx_buf[1] != 0x6A)
+        // 解析数据
+        if (rx_buf[0] != 0xA6 || rx_buf[1] != 0x6A)
         {
             return;
         }
-        #ifdef PARSE_DEBUG
+#ifdef PARSE_DEBUG
         printf("pasre_data start!\n");
-        #endif
+#endif
         uint8_t motor_nums = rx_buf[2];
-        if(motor_nums != (my_can1_motor_num + my_can2_motor_num))
+        if (motor_nums != (my_can1_motor_num + my_can2_motor_num))
         {
             return;
         }
-        for(uint8_t i = 0; i < motor_nums; i++)
+        for (uint8_t i = 0; i < motor_nums; i++)
         {
             temp_can = rx_buf[3 + i * MOTOR_STATUS_LENGTH] & 0xf0;
             temp_id = rx_buf[3 + i * MOTOR_STATUS_LENGTH] & 0x0f;
 
-            if(temp_can == 0x10)
+            if (temp_can == 0x10)
             {
                 all_motor_status.motor_fb1[temp_id - 1].motor.motor_id = temp_id;
                 memcpy(&all_motor_status.motor_fb1[temp_id - 1].data[1], &rx_buf[3 + i * MOTOR_STATUS_LENGTH + 1], MOTOR_STATUS_LENGTH - 1);
             }
-            else if(temp_can == 0x20)
+            else if (temp_can == 0x20)
             {
                 all_motor_status.motor_fb2[temp_id - 1].motor.motor_id = temp_id;
                 memcpy(&all_motor_status.motor_fb2[temp_id - 1].data[1], &rx_buf[3 + i * MOTOR_STATUS_LENGTH + 1], MOTOR_STATUS_LENGTH - 1);
@@ -315,17 +345,17 @@ private:
         }
         uint16_t imu_index = 3 + motor_nums * MOTOR_STATUS_LENGTH;
         uint16_t footsensor_index = 3 + motor_nums * MOTOR_STATUS_LENGTH;
-        if(my_isenable_imu && rx_buf[imu_index] == 0xAA)
+        if (my_isenable_imu && rx_buf[imu_index] == 0xAA)
         {
             memcpy(all_motor_status.myimu.data, &rx_buf[imu_index + 1], YJ901S_DATA_SIZE);
             footsensor_index = imu_index + YJ901S_DATA_SIZE;
         }
-        if(my_isenable_footsensor && rx_buf[footsensor_index] == 0xBB)
+        if (my_isenable_footsensor && rx_buf[footsensor_index] == 0xBB)
         {
             memcpy(all_motor_status.foot_sensor1, &rx_buf[footsensor_index + 1], 3);
             memcpy(all_motor_status.foot_sensor2, &rx_buf[footsensor_index + 4], 3);
         }
-        for(uint16_t i = 0; i < DATA_PKG_SIZE; i++)
+        for (uint16_t i = 0; i < DATA_PKG_SIZE; i++)
         {
             spi_tx_databuffer[i] = 0x00;
         }
@@ -336,7 +366,7 @@ private:
 
     void clear_tx_buffer(void)
     {
-        for(uint16_t i = 0; i < DATA_PKG_SIZE; i++)
+        for (uint16_t i = 0; i < DATA_PKG_SIZE; i++)
         {
             spi_tx_databuffer[i] = 0x00;
         }
@@ -344,7 +374,6 @@ private:
         spi_tx_databuffer[1] = 0x5A;
         spi_tx_motor_num = 0;
     }
-    
 };
 
 #endif // !_Livelybot_Driver_H_
