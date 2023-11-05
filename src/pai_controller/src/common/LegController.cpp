@@ -98,8 +98,6 @@ void LegController::updateCommand(LowlevelCmd* cmd){
 
         commands[i].tau << 0, 0, 0, 0, 0; // zero torque command to prevent interference
         
-        
-   
     }
     //std::cout << "cmd sent" << std::endl;
    

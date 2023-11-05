@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     while (ros::ok())
     {
         // ioInter->sendRecv(cmd, state);
-        ioInter->
+        // ioInter->
         rate.sleep();
         // cont++;
         // cout << state->motorState[6].q << " " << cmd->motorCmd[6].q << endl;
