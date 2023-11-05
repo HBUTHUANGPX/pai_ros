@@ -169,11 +169,6 @@ private:
         my_can2_motor_num = can2_motor_num;
         my_isenable_imu = isenable_imu;
         my_isenable_footsensor = isenable_footsensor;
-#ifdef DEBUG
-        cout << "spi_dev:" << my_spi_dev << endl;
-        printf("motor_type:%u, can1_motor_num:%u, can2_motor_num:%u, enable_imu:%u, footsensor:%u\n", motor_type, can1_motor_num, can2_motor_num, isenable_imu, isenable_footsensor);
-#endif // DEBUG
-
         int ret;
 
         // 使用SPI1接口
@@ -221,14 +216,6 @@ private:
         spi_tx_databuffer[6] = isenable_imu;
         spi_tx_databuffer[7] = isenable_footsensor;
         spi_tx_databuffer[8] = ENABLE_STOP;
-#ifdef TX_DEBUG
-        printf("tx_data: ");
-        for (uint16_t i = 0; i < DATA_PKG_SIZE; i++)
-        {
-            printf("0x%02x,", spi_tx_databuffer[i]);
-        }
-        printf("\n");
-#endif //
         uint8_t rx_buf[DATA_PKG_SIZE] = {};
         struct spi_ioc_transfer spi
         {
@@ -247,17 +234,6 @@ private:
             spi_tx_motor_num = 0;
             return;
         }
-#ifdef DEBUG
-        printf("transmit suc!\n");
-#endif // DEBUG
-#ifdef RX_DEBUG
-        printf("recv data: ");
-        for (uint16_t i = 0; i < DATA_PKG_SIZE; i++)
-        {
-            printf("0x%02x,", rx_buf[i]);
-        }
-        printf("\n");
-#endif // DEBUG
         parse_datas(rx_buf);
 
         close(spi_fd);
@@ -319,9 +295,6 @@ private:
         {
             return;
         }
-#ifdef PARSE_DEBUG
-        printf("pasre_data start!\n");
-#endif
         uint8_t motor_nums = rx_buf[2];
         if (motor_nums != (my_can1_motor_num + my_can2_motor_num))
         {

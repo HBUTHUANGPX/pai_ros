@@ -10,13 +10,13 @@ private:
     ros::NodeHandle _nm;
     ros::Subscriber _motor_sub; // 接收控制的数据
     ros::Publisher _motor_pub;
-    std::string _robot_name, _motor_name;
 
 public:
     int _ID;
     int _num;
     motor_fb_space_s motor_fb_space;
     Livelybot_Driver *_driver_pointer;
+    std::string _robot_name, _motor_name;
     motor(ros::NodeHandle nm,
           std::string robot_name,
           std::string motor_name,

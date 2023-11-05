@@ -32,7 +32,7 @@ void set_motor(ros::NodeHandle nh)
     side.push_back("L");
     side.push_back("R");
     int ID[5] = {5, 4, 3, 2, 1};
-    int CAN[2] = {0x10,0x20};
+    int CAN[2] = {0x10, 0x20};
     int num[5] = {0, 1, 2, 3, 4};
     int count_side = 0;
     int count_motor = 0;
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "pai_control", ros::init_options::AnonymousName);
     ros::NodeHandle nh;
     set_motor(nh);
-    ros::Rate rate(1000);
+    ros::Rate rate(10);
     double dt = 0.001;
     std::string robot_name = "pai";
     // std::cout << "robot name " << robot_name << std::endl;
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     StateEstimate stateEstimate;
     biped.setBiped();
     // PaiIO pai(robot_name, "/dev/spidev4.1");
-    ioInter = new PaiIO(robot_name,"/dev/spidev4.1");
+    ioInter = new PaiIO(robot_name, "/dev/spidev4.1");
 
     LowlevelCmd *cmd = new LowlevelCmd();
     LowlevelState *state = new LowlevelState();
@@ -77,9 +77,24 @@ int main(int argc, char **argv)
         cmd->motorCmd[i].q = 0.0;
         cmd->motorCmd[i].dq = 0.0;
         cmd->motorCmd[i].Kp = 0.0;
-        cmd->motorCmd[i].Kd = 0.1;
+        cmd->motorCmd[i].Kd = 0.01;
     }
     //
+    ros::Rate r(0.5);
+    ros::Rate r1(5);
+    for (size_t i = 0; i < 10; i++)
+    {
+        cmd->motorCmd[i].Kp = 0.0;
+        ioInter->sendRecv(cmd, state);
+        r1.sleep();
+    }
+    for (size_t i = 0; i < 10; i++)
+    {
+        cmd->motorCmd[i].Kp = 1.0;
+        ioInter->sendRecv(cmd, state);
+        r.sleep();
+    }
+
     while (ros::ok())
     {
         // cout<<spi_flag<<endl;

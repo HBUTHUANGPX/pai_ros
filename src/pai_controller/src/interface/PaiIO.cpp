@@ -34,6 +34,7 @@ PaiIO::~PaiIO()
 }
 void PaiIO::sendRecv(const LowlevelCmd *cmd, LowlevelState *state)
 {
+    std::cout << "=================" << std::endl;
     sendCmd(cmd);
     // std::cout << "sendcmd ok" << std::endl;
     recvState(state);
@@ -52,12 +53,11 @@ void PaiIO::sendCmd(const LowlevelCmd *cmd)
     for (motor motor_cmd : _send_recv._motors)
     {
         motor_cmd._driver_pointer->set_motor_position(motor_cmd._ID,
-                                                      0,//cmd->motorCmd[motor_cmd._num].q,
-                                                      0,//cmd->motorCmd[motor_cmd._num].dq,
-                                                      0,//cmd->motorCmd[motor_cmd._num].tau,
-                                                      0,//cmd->motorCmd[motor_cmd._num].Kp,
-                                                      0.15//cmd->motorCmd[motor_cmd._num].Kd
-                                                      );
+                                                      cmd->motorCmd[motor_cmd._num].q,
+                                                      cmd->motorCmd[motor_cmd._num].dq,
+                                                      cmd->motorCmd[motor_cmd._num].tau,
+                                                      cmd->motorCmd[motor_cmd._num].Kp,
+                                                      cmd->motorCmd[motor_cmd._num].Kd);
     }
 #else
 
@@ -87,7 +87,16 @@ void PaiIO::recvState(LowlevelState *state)
     for (motor motor_cmd : _send_recv._motors)
     {
         motor_cmd.fresh_motor();
-        state->motorState[motor_cmd._num].q = motor_cmd.motor_fb_space.position;
+        if (motor_cmd._motor_name == "L_toe" && motor_cmd._motor_name == "R_toe")
+        {
+            state->motorState[motor_cmd._num].q = motor_cmd.motor_fb_space.position / 5000.0 * 360.0;
+            std::cout << "motor: " << motor_cmd._ID << " position: " << motor_cmd.motor_fb_space.position / 5000.0 * 360.0 << std::endl;
+        }
+        else
+        {
+            state->motorState[motor_cmd._num].q = motor_cmd.motor_fb_space.position / 100000.0 * 360.0;
+            std::cout << "motor: " << motor_cmd._ID << " position: " << motor_cmd.motor_fb_space.position / 100000.0 * 360.0 << std::endl;
+        }
         state->motorState[motor_cmd._num].dq = motor_cmd.motor_fb_space.velocity;
         state->motorState[motor_cmd._num].tauEst = motor_cmd.motor_fb_space.torque;
     }

@@ -91,7 +91,6 @@ bool Livelybot_Driver::spi_send(void)
         perror("Error: Cann't open SPI Dev.\n");
         return false;
     }
-
     //配置SPI参数
     speed = SPI_SPEED;
     delay = 0;
@@ -102,13 +101,11 @@ bool Livelybot_Driver::spi_send(void)
         perror("Error: SPI_IOC_WR_MODE fault.\n");
         return false;
     }
-
     ret = ioctl(spi_fd, SPI_IOC_WR_BITS_PER_WORD, &bits_per_word);
     if (ret == -1) {
         perror("Error: SPI_IOC_WR_BITS fault.\n");
         return false;
     }
-
     ret = ioctl(spi_fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
     if (ret == -1) {
         perror("Error: SPI_IOC_WR_MAX_SPEED fault.\n");
@@ -117,14 +114,6 @@ bool Livelybot_Driver::spi_send(void)
 
     //发送数据
     spi_tx_databuffer[2] = spi_tx_motor_num | 0x10;
-    #ifdef TX_DEBUG
-    printf("tx_data: ");
-    for(uint16_t i = 0; i < DATA_PKG_SIZE; i++)
-    {
-        printf("0x%02x,", spi_tx_databuffer[i]);
-    }
-    printf("\n");
-    #endif // 
     uint8_t rx_buf[DATA_PKG_SIZE] = {};
     struct spi_ioc_transfer spi { };
     spi.tx_buf = (unsigned long)spi_tx_databuffer;
@@ -139,17 +128,6 @@ bool Livelybot_Driver::spi_send(void)
         perror("Error: SPI_IOC_MESSAGE fault.\n");
         return false;
     }
-    #ifdef DEBUG
-    printf("transmit suc!\n");
-    #endif // DEBUG
-    #ifdef RX_DEBUG
-    printf("recv data: ");
-    for(uint16_t i = 0; i < DATA_PKG_SIZE; i++)
-    {
-        printf("0x%02x,", rx_buf[i]);
-    }
-    printf("\n");
-    #endif // DEBUG
     //解析数据
     parse_datas(rx_buf);
     //关闭spi
