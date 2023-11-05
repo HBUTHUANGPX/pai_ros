@@ -379,13 +379,13 @@ void solve_mpc(update_data_t *update, problem_setup *setup)
 
   double PI = 3.14159265359;
   //Joint angles offset correction
-    q(2) +=  0.3*PI;
-    q(3) -=  0.6*PI;
-    q(4) +=  0.3*PI;
+    q(2) +=  0.25*PI;
+    q(3) -=  0.5*PI;
+    q(4) +=  0.25*PI;
 
-    q(7) +=  0.3*PI;
-    q(8) -=  0.6*PI;
-    q(9) +=  0.3*PI;
+    q(7) +=  0.25*PI;
+    q(8) -=  0.5*PI;
+    q(9) +=  0.25*PI;
 
     double PI2 = 2*PI;
     for(int i = 0; i < 10; i++){
