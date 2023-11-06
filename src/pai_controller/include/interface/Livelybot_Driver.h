@@ -137,6 +137,7 @@ private:
     uint8_t bits_per_word;
     uint8_t mode;
     high_resolution_clock::time_point t1, t2;
+    int ret;
 
 public:
     // 构造函数
@@ -160,8 +161,9 @@ public:
 
     int32_t transfer_send(tranfer_send_type_e type, float data);
     float transfer_rec(tranfer_rec_type_e type, int32_t data);
-
+    void ctl_spi();
 private:
+
     void set_robot_param(int8_t motor_type, int8_t can1_motor_num, int8_t can2_motor_num, uint8_t isenable_imu, uint8_t isenable_footsensor)
     {
         my_motor_type = motor_type;
@@ -170,43 +172,6 @@ private:
         my_isenable_imu = isenable_imu;
         my_isenable_footsensor = isenable_footsensor;
         int ret;
-
-        // 使用SPI1接口
-        spi_fd = open(my_spi_dev.data(), O_RDWR);
-        if (spi_fd < 0)
-        {
-            perror("Error: Cann't open SPI Dev.\n");
-            return;
-        }
-
-        // 配置SPI参数
-        speed = SPI_SPEED;
-        delay = 0;
-        bits_per_word = 8;
-        mode = 0;
-        ret = ioctl(spi_fd, SPI_IOC_WR_MODE, &mode);
-        if (ret == -1)
-        {
-            perror("Error: SPI_IOC_WR_MODE fault.\n");
-            spi_tx_motor_num = 0;
-            return;
-        }
-
-        ret = ioctl(spi_fd, SPI_IOC_WR_BITS_PER_WORD, &bits_per_word);
-        if (ret == -1)
-        {
-            perror("Error: SPI_IOC_WR_BITS fault.\n");
-            spi_tx_motor_num = 0;
-            return;
-        }
-
-        ret = ioctl(spi_fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
-        if (ret == -1)
-        {
-            perror("Error: SPI_IOC_WR_MAX_SPEED fault.\n");
-            spi_tx_motor_num = 0;
-            return;
-        }
 
         // 发送数据
         spi_tx_databuffer[2] = 0x20;
@@ -236,7 +201,7 @@ private:
         }
         parse_datas(rx_buf);
 
-        close(spi_fd);
+        // close(spi_fd);
     }
 
     void motor_set(uint8_t motor_id, int32_t cmd, int32_t posorvolt, int32_t vel, int32_t torque, float kp, float kd)
@@ -336,7 +301,7 @@ private:
         spi_tx_databuffer[1] = 0x5A;
         spi_tx_motor_num = 0;
     }
-
+//
     void clear_tx_buffer(void)
     {
         for (uint16_t i = 0; i < DATA_PKG_SIZE; i++)

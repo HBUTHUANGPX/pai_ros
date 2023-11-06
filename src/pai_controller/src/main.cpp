@@ -76,24 +76,25 @@ int main(int argc, char **argv)
     {
         cmd->motorCmd[i].q = 0.0;
         cmd->motorCmd[i].dq = 0.0;
-        cmd->motorCmd[i].Kp = 0.0;
-        cmd->motorCmd[i].Kd = 0.01;
+        cmd->motorCmd[i].Kp = 0.05;
+        cmd->motorCmd[i].Kd = 0.0;
+        cmd->motorCmd[i].tau = 0.0;
     }
     //
-    ros::Rate r(0.5);
-    ros::Rate r1(5);
-    for (size_t i = 0; i < 10; i++)
-    {
-        cmd->motorCmd[i].Kp = 0.0;
-        ioInter->sendRecv(cmd, state);
-        r1.sleep();
-    }
-    for (size_t i = 0; i < 10; i++)
-    {
-        cmd->motorCmd[i].Kp = 1.0;
-        ioInter->sendRecv(cmd, state);
-        r.sleep();
-    }
+    // ros::Rate r(0.5);
+    // ros::Rate r1(5);
+    // for (size_t i = 0; i < 10; i++)
+    // {
+    //     cmd->motorCmd[i].Kp = 0.0;
+    //     ioInter->sendRecv(cmd, state);
+    //     r1.sleep();
+    // }
+    // for (size_t i = 0; i < 10; i++)
+    // {
+    //     cmd->motorCmd[i].Kp = 1.0;
+    //     ioInter->sendRecv(cmd, state);
+    //     r.sleep();
+    // }
 
     while (ros::ok())
     {
@@ -111,7 +112,7 @@ int main(int argc, char **argv)
         // cont++;
         // cout << state->motorState[6].q << " " << cmd->motorCmd[6].q << endl;
     }
-
+    delete ioInter;
     ////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////gazebo////////////////////////////////////////////////
 
@@ -123,7 +124,7 @@ int main(int argc, char **argv)
     // stateEstimator->addEstimator<CheaterPositionVelocityEstimator>();
     // DesiredStateCommand *desiredStateCommand = new DesiredStateCommand(&stateEstimate, dt);
 
-    ControlFSMData *_controlData = new ControlFSMData;
+    // ControlFSMData *_controlData = new ControlFSMData;
     // _controlData->_biped = &biped;
     // _controlData->_stateEstimator = stateEstimator;
     // _controlData->_legController = legController;

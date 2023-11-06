@@ -16,7 +16,6 @@ public:
     send_recv(ros::NodeHandle nm, std::string robot_name, const std::string spi_dev) : _nm(nm), _robot_name(robot_name), _driver(spi_dev)
     {
         Livelybot_Driver *_driver_pointer = &_driver;
-
         _motor_names.push_back("L_hip");
         _motor_names.push_back("L_hip2"); 
         _motor_names.push_back("L_thigh");
