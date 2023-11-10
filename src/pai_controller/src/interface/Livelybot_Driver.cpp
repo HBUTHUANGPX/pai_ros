@@ -149,7 +149,7 @@ kd：         kd值
 */
 void Livelybot_Driver::set_motor_position(int8_t motor_id, int32_t position, int32_t velocity, int32_t torque, float kp, float kd)
 {
-    motor_set(motor_id, 7, position, velocity, 0, kp, kd);
+    motor_set(motor_id, 7, position, velocity, torque, kp, kd);
 }
 
 // 速度模式

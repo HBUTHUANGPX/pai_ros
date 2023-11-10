@@ -4,9 +4,9 @@ inline void RosShutDown(int sig)
     ROS_INFO("ROS interface shutting down!");
     ros::shutdown();
 }
-PaiIO::PaiIO(std::string robot_name, const std::string spi_name) : IOInterface(),
+PaiIO::PaiIO(std::string robot_name, const std::string spi_name, double dt) : IOInterface(), f(1 / dt),
 #if USE
-                                                                   _send_recv(_nm, robot_name, spi_name)
+                                                                              _send_recv(_nm, robot_name, spi_name)
 #endif
 {
     std::cout << "The control interface for ROS Gazebo simulation with cheat states from gazebo" << std::endl;
@@ -36,29 +36,46 @@ void PaiIO::sendRecv(const LowlevelCmd *cmd, LowlevelState *state)
 {
     std::cout << "=================" << std::endl;
     sendCmd(cmd);
-    // std::cout << "sendcmd ok" << std::endl;
-    recvState(state);
-    // std::cout << "recvstate ok" << std::endl;
-    _send_recv._driver.spi_send();
+#if USE
+    for (motor motor_cmd : _send_recv._motors)
+    {
+        motor_cmd.fresh_motor(&(state->motorState[motor_cmd._num]), cmd->motorCmd[motor_cmd._num].tau);
+    }
 
+#else
+    recvState(state);
+#endif
+    _send_recv._driver.spi_send();
     cmdPanel->updateVelCmd(state);
-    // std::cout << "updata ok" << std::endl;
     state->userCmd = cmdPanel->getUserCmd();
     state->userValue = cmdPanel->getUserValue();
-    // std::cout << "ok" << std::endl;
 }
 void PaiIO::sendCmd(const LowlevelCmd *cmd)
 {
 #if USE
     for (motor motor_cmd : _send_recv._motors)
     {
-        motor_cmd._driver_pointer->set_motor_position(motor_cmd._ID,
-                                                      cmd->motorCmd[motor_cmd._num].q,
-                                                      cmd->motorCmd[motor_cmd._num].dq,
-                                                      cmd->motorCmd[motor_cmd._num].tau,
-                                                      cmd->motorCmd[motor_cmd._num].Kp,
-                                                      cmd->motorCmd[motor_cmd._num].Kd);
+        // if (motor_cmd._motor_name == "L_toe" || motor_cmd._motor_name == "R_toe")
+        // {
+        //     motor_cmd._driver_pointer->set_motor_position(motor_cmd._ID,
+        //                                                   (int32_t)cmd->motorCmd[motor_cmd._num].q * 2000000 / 360.0,
+        //                                                   (int32_t)cmd->motorCmd[motor_cmd._num].dq * 2000000 / (2 * PI),
+        //                                                   (int32_t)cmd->motorCmd[motor_cmd._num].tau * 100,
+        //                                                   cmd->motorCmd[motor_cmd._num].Kp,
+        //                                                   cmd->motorCmd[motor_cmd._num].Kd);
+        // }
+        // else
+        {
+            motor_cmd._driver_pointer->set_motor_position(motor_cmd._ID,
+                                                          (int32_t)cmd->motorCmd[motor_cmd._num].q * 100000 / 360.0,
+                                                          (int32_t)cmd->motorCmd[motor_cmd._num].dq * 100000 / 360.0,
+                                                          (int32_t)cmd->motorCmd[motor_cmd._num].tau * 2000,
+                                                          cmd->motorCmd[motor_cmd._num].Kp,
+                                                          cmd->motorCmd[motor_cmd._num].Kd);
+        }
     }
+    // cout << cmd->motorCmd[3].tau << endl;
+
 #else
 
     for (int i = 0; i < 10; i++)
@@ -83,24 +100,7 @@ void PaiIO::sendCmd(const LowlevelCmd *cmd)
 }
 void PaiIO::recvState(LowlevelState *state)
 {
-#if USE
-    for (motor motor_cmd : _send_recv._motors)
-    {
-        motor_cmd.fresh_motor();
-        if (motor_cmd._motor_name == "L_toe" && motor_cmd._motor_name == "R_toe")
-        {
-            state->motorState[motor_cmd._num].q = motor_cmd.motor_fb_space.position / 5000.0 * 360.0;
-            std::cout << "motor: " << motor_cmd._ID << " position: " << motor_cmd.motor_fb_space.position / 5000.0 * 360.0 << std::endl;
-        }
-        else
-        {
-            state->motorState[motor_cmd._num].q = motor_cmd.motor_fb_space.position / 100000.0 * 360.0;
-            std::cout << "motor: " << motor_cmd._ID << " position: " << motor_cmd.motor_fb_space.position / 100000.0 * 360.0 << std::endl;
-        }
-        state->motorState[motor_cmd._num].dq = motor_cmd.motor_fb_space.velocity;
-        state->motorState[motor_cmd._num].tauEst = motor_cmd.motor_fb_space.torque;
-    }
-#else
+
     for (int i = 0; i < 10; i++)
     {
         state->motorState[i].q = _highState.motorState[i].q;
@@ -115,7 +115,6 @@ void PaiIO::recvState(LowlevelState *state)
         state->vWorld[i] = _highState.velocity[i];
     }
     state->imu.quaternion[3] = _highState.imu.quaternion[3];
-#endif
 }
 #if USE // 使用真实机器人
 std::string _use = "_real";

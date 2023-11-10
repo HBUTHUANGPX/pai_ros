@@ -23,7 +23,7 @@ private:
     std::string _robot_name;
     pai_msgs::HighState _highState;
     pai_msgs::LowCmd _lowCmd;
-
+    double f;
 public:
 #if USE // 使用真实机器人
     send_recv _send_recv;
@@ -31,7 +31,7 @@ public:
     ros::Subscriber _servo_sub[10], _state_sub;
     ros::Publisher _servo_pub[10];
 #endif
-    PaiIO(std::string robot_name, const std::string spi_name);
+    PaiIO(std::string robot_name, const std::string spi_name,double dt);
     ~PaiIO();
     void sendCmd(const LowlevelCmd *cmd);
     void sendRecv(const LowlevelCmd *cmd, LowlevelState *state);

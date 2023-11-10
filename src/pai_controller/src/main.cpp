@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "pai_control", ros::init_options::AnonymousName);
     ros::NodeHandle nh;
     set_motor(nh);
-    ros::Rate rate(10);
+    ros::Rate rate(1000);
     double dt = 0.001;
     std::string robot_name = "pai";
     // std::cout << "robot name " << robot_name << std::endl;
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     StateEstimate stateEstimate;
     biped.setBiped();
     // PaiIO pai(robot_name, "/dev/spidev4.1");
-    ioInter = new PaiIO(robot_name, "/dev/spidev4.1");
+    ioInter = new PaiIO(robot_name, "/dev/spidev4.1", dt);
 
     LowlevelCmd *cmd = new LowlevelCmd();
     LowlevelState *state = new LowlevelState();
@@ -71,35 +71,71 @@ int main(int argc, char **argv)
     signal(SIGINT, ShutDown);
     ///////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////simple control////////////////////////////////////////
+    // R_toe     0    90
+    // R_calf    0    90
+    // R_thigh -40    90
+    // R_hip2  -25    25
+    // R_hip   -15    30
 
+    // L_toe   -90    0
+    // L_calf  -90    0
+    // L_thigh -90    40
+    // L_hip2  -25    25
+    // L_hip   -30    15
+    float q[10] = {0.0, 0.0, -17.0, -15.0, -40.0,
+                   0.0, 0.0, 17.0, 15.0, 40.0};
+    float kp[10] = {0.1, 0.1, 1.0, 1.0, 1.0,
+                    0.1, 0.1, 1.0, 1.0, 1.0};
+    float tau[10] = {0.0, 0.0, 1.0, 1.0, 0.0,
+                     0.0, 0.0, -1.0, -1.0, 1.0};
+    float tau1[10] = {0.0, 0.0, 1.0, 1.0, 0.0,
+                      0.0, 0.0, -1.0, -1.0, 0.5};
+    float tau2[10] = {0.0, 0.0, 2.0, 2.0, 0.0,
+                      0.0, 0.0, -2.0, -2.0, 3.5};
+    float tau_derta[10] = {0.0};
     for (size_t i = 0; i < 10; i++)
     {
-        cmd->motorCmd[i].q = 0.0;
-        cmd->motorCmd[i].dq = 0.0;
-        cmd->motorCmd[i].Kp = 0.05;
-        cmd->motorCmd[i].Kd = 0.0;
-        cmd->motorCmd[i].tau = 0.0;
+        tau_derta[i] = (tau2[i] - tau1[i]) / 4000.0;
     }
-    //
-    // ros::Rate r(0.5);
-    // ros::Rate r1(5);
+    for (size_t i = 0; i < 10; i++)
+    {
+        cmd->motorCmd[i].q = q[i];
+        cmd->motorCmd[i].dq = 0.0;
+        cmd->motorCmd[i].Kp = kp[i];
+        cmd->motorCmd[i].Kd = 0.01;
+        cmd->motorCmd[i].tau = tau1[i];
+    }
+    // cmd->motorCmd[2].Kp=cmd->motorCmd[3].Kp=cmd->motorCmd[7].Kp=cmd->motorCmd[8].Kp=0.005;
     // for (size_t i = 0; i < 10; i++)
     // {
+    //     cmd->motorCmd[i].q = 0.0;
+    //     cmd->motorCmd[i].dq = 0.0;
     //     cmd->motorCmd[i].Kp = 0.0;
-    //     ioInter->sendRecv(cmd, state);
-    //     r1.sleep();
+    //     cmd->motorCmd[i].Kd = 0.0;
+    //     cmd->motorCmd[i].tau = tau1[i];
     // }
-    // for (size_t i = 0; i < 10; i++)
-    // {
-    //     cmd->motorCmd[i].Kp = 1.0;
-    //     ioInter->sendRecv(cmd, state);
-    //     r.sleep();
-    // }
-
+    cmd->motorCmd[9].q = 0.0;
+    cmd->motorCmd[9].dq = 0.2 * (2 * PI);
+    cmd->motorCmd[9].Kp = 0.0;
+    cmd->motorCmd[9].Kd = 0.0;
+    int turn_flag = 1;
+    int cont = 0;
     while (ros::ok())
     {
-        // cout<<spi_flag<<endl;
+        for (size_t i = 0; i < 10; i++)
+        {
+            tau[i] += turn_flag * tau_derta[i];
+            cmd->motorCmd[i].tau = tau[i];
+            // cout<<tau2[i]<<endl;
+        }
+        cont++;
+        if (cont == 4000)
+        {
+            turn_flag *= -1;
+            cont = 0;
+        }
         ioInter->sendRecv(cmd, state);
+
         // pai._send_recv._motors[0]._driver_pointer->set_motor_position(pai._send_recv._motors[0]._ID, 0, 0, 0, 0, 0);
         // pai._send_recv._motors[0].fresh_motor();
         // pai._send_recv._motors[0]._driver_pointer->set_motor_position(pai._send_recv._motors[0]._ID, 0);

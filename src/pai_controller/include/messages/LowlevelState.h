@@ -85,6 +85,15 @@ struct LowlevelState
             vWorld[i] = 0;
             rpy[i] = 0;
         }
+        for (size_t i = 0; i < 10; i++)
+        {
+            motorState[i].dq=0.0;
+            motorState[i].ddq=0.0;
+            motorState[i].q=0.0;
+            motorState[i].tauEst=0.0;
+            motorState[i].mode=0;
+        }
+        
     }
 };
 
