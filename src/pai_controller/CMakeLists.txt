@@ -33,11 +33,12 @@ link_directories(
     ${GAZEBO_LIBRARY_DIRS}
 )
 file(GLOB_RECURSE SRC_LIST
-"src/*.cpp"
 "src/*/*.cpp"
 "src/*/*.h"
 "ConvexMPC/*.cpp"
 )
 add_subdirectory(third_party/qpOASES)
 add_executable(main src/main.cpp  ${SRC_LIST} )
+add_executable(start_socket_can src/start_socket_can.cpp )
 target_link_libraries(main ${catkin_LIBRARIES} qpOASES -pthread lcm)
+target_link_libraries(start_socket_can ${catkin_LIBRARIES})
